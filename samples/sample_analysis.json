@@ -1,0 +1,77 @@
+{
+  "analysis_metadata": {
+    "text_length": 634,
+    "analysis_timestamp": "2025-01-27 10:30:00",
+    "dominant_emotions": ["anticipation", "fear", "trust"],
+    "overall_emotional_tone": "Tense anticipation mixed with experienced confidence",
+    "confidence_score": 0.88
+  },
+  "part1_basic_emotions": {
+    "joy": 0.1,
+    "trust": 0.6,
+    "fear": 0.7,
+    "surprise": 0.2,
+    "sadness": 0.1,
+    "disgust": 0.0,
+    "anger": 0.1,
+    "anticipation": 0.8
+  },
+  "part2_intensity_levels": {
+    "joy": { "mild": 0.1, "moderate": 0.0, "intense": 0.0 },
+    "trust": { "mild": 0.2, "moderate": 0.4, "intense": 0.0 },
+    "fear": { "mild": 0.2, "moderate": 0.4, "intense": 0.1 },
+    "surprise": { "mild": 0.2, "moderate": 0.0, "intense": 0.0 },
+    "sadness": { "mild": 0.1, "moderate": 0.0, "intense": 0.0 },
+    "disgust": { "mild": 0.0, "moderate": 0.0, "intense": 0.0 },
+    "anger": { "mild": 0.1, "moderate": 0.0, "intense": 0.0 },
+    "anticipation": { "mild": 0.3, "moderate": 0.4, "intense": 0.1 }
+  },
+  "part3_emotional_dyads": {
+    "primary_dyads": {
+      "optimism": 0.4,
+      "love": 0.1,
+      "submission": 0.3,
+      "awe": 0.5,
+      "disapproval": 0.1,
+      "remorse": 0.0,
+      "contempt": 0.0,
+      "aggressiveness": 0.3
+    },
+    "secondary_dyads": {
+      "pride": 0.2,
+      "hope": 0.6,
+      "anxiety": 0.7,
+      "shame": 0.1,
+      "sentimentality": 0.2,
+      "cynicism": 0.1,
+      "outrage": 0.1,
+      "envy": 0.0
+    },
+    "tertiary_dyads": {
+      "delight": 0.1,
+      "guilt": 0.1,
+      "curiosity": 0.3,
+      "despair": 0.2,
+      "unbelief": 0.0,
+      "pessimism": 0.2,
+      "morbidness": 0.0,
+      "dominance": 0.4
+    }
+  },
+  "analysis_summary": {
+    "key_findings": [
+      "Strong anticipation dominates the emotional landscape",
+      "Fear is present but balanced by trust and experience",
+      "The text shows emotional complexity with both negative apprehension and positive confidence"
+    ],
+    "emotional_complexity": "High complexity with layered emotions - surface fear counterbalanced by deep professional trust and anticipatory excitement",
+    "notable_patterns": [
+      "Tension between fear and trust creates emotional depth",
+      "Anticipation builds throughout the narrative"
+    ],
+    "recommendations": [
+      "This text would be effective for teaching about emotional complexity in literature",
+      "Good example of how professional experience can moderate natural fear responses"
+    ]
+  }
+}

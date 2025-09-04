@@ -1,0 +1,13 @@
+# Core dependencies for Pluto JSON-based emotion visualization tool
+# Using compatible versions that work on modern systems
+pyplutchik>=0.0.11
+shapely>=1.8.0,<2.0.0
+descartes==1.1.0
+
+# Standard dependencies - let pip resolve compatible versions
+numpy
+matplotlib
+
+# Optional dependencies for enhanced functionality
+pandas
+seaborn

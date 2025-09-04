@@ -1,0 +1,221 @@
+#!/usr/bin/env python3
+"""
+Pluto - JSON-based Plutchik Emotion Wheel Visualization
+
+This script reads JSON emotion analysis data and generates a Plutchik emotion wheel visualization.
+Usage: pluto path/to/analysis.json
+Output: path/to/analysis-plutchik.png
+
+Dependencies:
+- pyplutchik
+- matplotlib
+"""
+
+import sys
+import os
+import argparse
+import json
+from pathlib import Path
+import matplotlib.pyplot as plt
+
+try:
+    from pyplutchik import plutchik
+except ImportError:
+    print("Error: pyplutchik library not found. Please install it with: pip install pyplutchik")
+    sys.exit(1)
+
+class JSONEmotionParser:
+    """Parses JSON emotion analysis data for Plutchik visualization."""
+    
+    def __init__(self):
+        # Expected emotion names in Plutchik's model
+        self.expected_emotions = [
+            'joy', 'trust', 'fear', 'surprise', 
+            'sadness', 'disgust', 'anger', 'anticipation'
+        ]
+    
+    def parse_json_file(self, json_path):
+        """
+        Parse JSON file containing emotion analysis data.
+        
+        Args:
+            json_path (str): Path to the JSON file
+            
+        Returns:
+            dict: Dictionary with emotion names as keys and 3-element arrays [mild, moderate, intense] as values
+        """
+        try:
+            with open(json_path, 'r', encoding='utf-8') as file:
+                data = json.load(file)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON format: {e}")
+        except FileNotFoundError:
+            raise FileNotFoundError(f"JSON file not found: {json_path}")
+        except Exception as e:
+            raise Exception(f"Error reading JSON file: {e}")
+        
+        # Extract the part2_intensity_levels section
+        if 'part2_intensity_levels' not in data:
+            raise ValueError("JSON must contain 'part2_intensity_levels' section")
+        
+        intensity_data = data['part2_intensity_levels']
+        
+        # Convert to the format expected by pyplutchik
+        emotions_degrees = {}
+        
+        for emotion in self.expected_emotions:
+            if emotion not in intensity_data:
+                print(f"Warning: {emotion} not found in JSON, using default values [0.0, 0.0, 0.0]")
+                emotions_degrees[emotion] = [0.0, 0.0, 0.0]
+            else:
+                emotion_data = intensity_data[emotion]
+                
+                # Ensure all three intensity levels are present
+                mild = emotion_data.get('mild', 0.0)
+                moderate = emotion_data.get('moderate', 0.0)
+                intense = emotion_data.get('intense', 0.0)
+                
+                emotions_degrees[emotion] = [mild, moderate, intense]
+        
+        # Validate the data
+        self._validate_emotion_data(emotions_degrees)
+        
+        return emotions_degrees
+    
+    def _validate_emotion_data(self, emotions_degrees):
+        """Validate that emotion data is in the correct format."""
+        for emotion, degrees in emotions_degrees.items():
+            if not isinstance(degrees, list) or len(degrees) != 3:
+                raise ValueError(f"Emotion '{emotion}' must have exactly 3 intensity levels")
+            
+            for i, degree in enumerate(degrees):
+                if not isinstance(degree, (int, float)) or degree < 0:
+                    raise ValueError(f"Emotion '{emotion}' intensity level {i} must be a non-negative number")
+            
+            # Check if sum exceeds 1.0 (warn but don't error)
+            total = sum(degrees)
+            if total > 1.0:
+                print(f"Warning: {emotion} total intensity ({total:.3f}) exceeds 1.0")
+    
+    def get_metadata(self, json_path):
+        """Extract metadata from the JSON file for display purposes."""
+        try:
+            with open(json_path, 'r', encoding='utf-8') as file:
+                data = json.load(file)
+            
+            metadata = data.get('analysis_metadata', {})
+            return {
+                'dominant_emotions': metadata.get('dominant_emotions', []),
+                'overall_tone': metadata.get('overall_emotional_tone', 'Unknown'),
+                'confidence': metadata.get('confidence_score', 0.0),
+                'text_length': metadata.get('text_length', 0)
+            }
+        except:
+            return {}
+
+def validate_json_file(file_path):
+    """Validate that the file is a valid JSON file with required structure."""
+    try:
+        parser = JSONEmotionParser()
+        emotions_degrees = parser.parse_json_file(file_path)
+        return True, emotions_degrees, parser.get_metadata(file_path)
+    except Exception as e:
+        return False, None, str(e)
+
+def generate_emotion_wheel(emotions_degrees, output_path, title=None, metadata=None):
+    """Generate and save the Plutchik emotion wheel."""
+    try:
+        # Generate the Plutchik wheel with 3-dimensional data (no titles or metadata)
+        plutchik(emotions_degrees)
+        
+        # Save the figure with high quality (clean visualization only)
+        plt.savefig(output_path, dpi=300, bbox_inches='tight', 
+                   facecolor='white', edgecolor='none')
+        plt.close()
+        
+        return True
+    except Exception as e:
+        print(f"Error generating emotion wheel: {e}")
+        return False
+
+def main():
+    """Main function to handle command line interface."""
+    parser = argparse.ArgumentParser(
+        description='Generate Plutchik emotion wheel from JSON analysis data',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  pluto analysis.json              # Creates analysis-plutchik.png
+  pluto /path/to/emotion_data.json # Creates /path/to/emotion_data-plutchik.png
+        """
+    )
+    
+    parser.add_argument('json_path', 
+                       help='Path to the JSON file containing emotion analysis data')
+    parser.add_argument('--output', '-o',
+                       help='Custom output path for the image')
+    parser.add_argument('--title', '-t',
+                       help='Custom title for the emotion wheel')
+    parser.add_argument('--verbose', '-v', action='store_true',
+                       help='Show detailed emotion intensity levels')
+    
+    args = parser.parse_args()
+    
+    # Check if input file exists
+    if not os.path.isfile(args.json_path):
+        print(f"Error: File '{args.json_path}' not found.")
+        sys.exit(1)
+    
+    # Validate and parse the JSON file
+    print(f"Reading JSON file: {args.json_path}")
+    is_valid, emotions_degrees, metadata_or_error = validate_json_file(args.json_path)
+    
+    if not is_valid:
+        print(f"Error parsing JSON file: {metadata_or_error}")
+        sys.exit(1)
+    
+    metadata = metadata_or_error
+    
+    # Show detailed scores if verbose
+    if args.verbose:
+        print("\nEmotion Intensity Levels:")
+        for emotion, degrees in sorted(emotions_degrees.items()):
+            mild, moderate, intense = degrees
+            total = sum(degrees)
+            print(f"  {emotion.capitalize():12} - Mild: {mild:.3f}, Moderate: {moderate:.3f}, Intense: {intense:.3f} (Total: {total:.3f})")
+        
+        if metadata:
+            print(f"\nMetadata:")
+            print(f"  Dominant emotions: {', '.join(metadata.get('dominant_emotions', ['None']))}")
+            print(f"  Overall tone: {metadata.get('overall_tone', 'Unknown')}")
+            print(f"  Confidence: {metadata.get('confidence', 0.0):.3f}")
+            print(f"  Text length: {metadata.get('text_length', 0)} characters")
+        print()
+    
+    # Determine output path
+    if args.output:
+        output_path = args.output
+    else:
+        file_path = Path(args.json_path)
+        output_path = file_path.parent / f"{file_path.stem}-plutchik.png"
+    
+    # Generate title
+    if args.title:
+        title = args.title
+    elif metadata and metadata.get('overall_tone'):
+        title = f"Emotion Analysis: {metadata['overall_tone']}"
+    else:
+        title = f"Emotion Analysis: {Path(args.json_path).name}"
+    
+    # Generate and save the emotion wheel
+    print(f"Generating emotion wheel...")
+    success = generate_emotion_wheel(emotions_degrees, output_path, title, metadata)
+    
+    if success:
+        print(f"Emotion wheel saved as: {output_path}")
+    else:
+        print("Failed to generate emotion wheel.")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
