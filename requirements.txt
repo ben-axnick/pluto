@@ -4,8 +4,8 @@ pyplutchik>=0.0.11
 shapely>=1.8.0,<2.0.0
 descartes==1.1.0
 
-# Standard dependencies - let pip resolve compatible versions
-numpy
+# Standard dependencies - use NumPy 1.x for pyplutchik compatibility
+numpy<2.0.0
 matplotlib
 
 # Optional dependencies for enhanced functionality

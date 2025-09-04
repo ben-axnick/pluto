@@ -44,18 +44,19 @@ setup-nltk:
 setup: install setup-nltk
 	@echo "✓ Setup complete! You can now use ./pluto <text_file>"
 
-# Test the installation with sample text
+# Test the installation with existing JSON
 test: check-python
-	@if [ ! -f "sample_text.txt" ]; then \
-		echo "Creating sample text file..."; \
-		echo "I am absolutely thrilled and overjoyed about this amazing opportunity! However, I must admit I'm quite worried and anxious about the upcoming presentation. Despite my fears, I'm excited and hopeful about what the future holds." > sample_text.txt; \
-	fi
-	@echo "Running test analysis..."
-	python3 pluto sample_text.txt --verbose
-	@if [ -f "sample_text-plutchik.png" ]; then \
-		echo "✓ Test completed successfully! Output: sample_text-plutchik.png"; \
+	@if [ -f "stories/john-oliver-claude.json" ]; then \
+		echo "Running test analysis with existing JSON..."; \
+		python3 pluto stories/john-oliver-claude.json --verbose; \
+		if [ -f "stories/john-oliver-claude-plutchik.png" ]; then \
+			echo "✓ Test completed successfully! Output: stories/john-oliver-claude-plutchik.png"; \
+		else \
+			echo "✗ Test failed - no output file generated"; \
+			exit 1; \
+		fi; \
 	else \
-		echo "✗ Test failed - no output file generated"; \
+		echo "✗ Test failed - no test JSON file found. Please ensure stories/john-oliver-claude.json exists."; \
 		exit 1; \
 	fi
 
