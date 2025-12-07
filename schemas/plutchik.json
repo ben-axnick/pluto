@@ -1,0 +1,144 @@
+{
+  "name": "plutchik",
+  "strict": true,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "analysis_metadata": {
+        "type": "object",
+        "properties": {
+          "dominant_emotions": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "overall_emotional_tone": { "type": "string" },
+          "confidence_score": { "type": "number" }
+        },
+        "required": [
+          "dominant_emotions",
+          "overall_emotional_tone",
+          "confidence_score"
+        ],
+        "additionalProperties": false
+      },
+      "basic_emotions": {
+        "type": "object",
+        "properties": {
+          "joy": {
+            "type": "object",
+            "properties": {
+              "mild": { "type": "number" },
+              "moderate": { "type": "number" },
+              "intense": { "type": "number" }
+            },
+            "required": ["mild", "moderate", "intense"],
+            "additionalProperties": false
+          },
+          "trust": {
+            "type": "object",
+            "properties": {
+              "mild": { "type": "number" },
+              "moderate": { "type": "number" },
+              "intense": { "type": "number" }
+            },
+            "required": ["mild", "moderate", "intense"],
+            "additionalProperties": false
+          },
+          "fear": {
+            "type": "object",
+            "properties": {
+              "mild": { "type": "number" },
+              "moderate": { "type": "number" },
+              "intense": { "type": "number" }
+            },
+            "required": ["mild", "moderate", "intense"],
+            "additionalProperties": false
+          },
+          "surprise": {
+            "type": "object",
+            "properties": {
+              "mild": { "type": "number" },
+              "moderate": { "type": "number" },
+              "intense": { "type": "number" }
+            },
+            "required": ["mild", "moderate", "intense"],
+            "additionalProperties": false
+          },
+          "sadness": {
+            "type": "object",
+            "properties": {
+              "mild": { "type": "number" },
+              "moderate": { "type": "number" },
+              "intense": { "type": "number" }
+            },
+            "required": ["mild", "moderate", "intense"],
+            "additionalProperties": false
+          },
+          "disgust": {
+            "type": "object",
+            "properties": {
+              "mild": { "type": "number" },
+              "moderate": { "type": "number" },
+              "intense": { "type": "number" }
+            },
+            "required": ["mild", "moderate", "intense"],
+            "additionalProperties": false
+          },
+          "anger": {
+            "type": "object",
+            "properties": {
+              "mild": { "type": "number" },
+              "moderate": { "type": "number" },
+              "intense": { "type": "number" }
+            },
+            "required": ["mild", "moderate", "intense"],
+            "additionalProperties": false
+          },
+          "anticipation": {
+            "type": "object",
+            "properties": {
+              "mild": { "type": "number" },
+              "moderate": { "type": "number" },
+              "intense": { "type": "number" }
+            },
+            "required": ["mild", "moderate", "intense"],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "joy",
+          "trust",
+          "fear",
+          "surprise",
+          "sadness",
+          "disgust",
+          "anger",
+          "anticipation"
+        ],
+        "additionalProperties": false
+      },
+      "analysis_summary": {
+        "type": "object",
+        "properties": {
+          "key_findings": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "emotional_complexity": { "type": "string" },
+          "notable_patterns": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "required": [
+          "key_findings",
+          "emotional_complexity",
+          "notable_patterns"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": ["analysis_metadata", "basic_emotions", "analysis_summary"],
+    "additionalProperties": false
+  }
+}
