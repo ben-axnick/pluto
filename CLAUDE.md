@@ -1,0 +1,63 @@
+@/Users/bentheax/Agents/projects/Code/rules/python.mdc
+
+# Pluto
+
+Plutchik emotion wheel visualiser. Two tools: `pluto` renders a wheel from a JSON analysis file; `emoatlas_analyzer/analyze` runs text through EmoAtlas and produces that JSON. See README.md for full usage.
+
+## Structure
+
+| Path | Role |
+|---|---|
+| `pluto` | Main Python executable - reads JSON, renders PNG via pyplutchik |
+| `emoatlas_analyzer/analyze` | Text -> JSON pipeline using EmoAtlas + spaCy |
+| `schemas/` | JSON schemas for the plutchik format (current and legacy) |
+| `prompts/` | LLM prompt for generating JSON manually, plus schema refs |
+| `samples/` | Sample JSON and text inputs |
+| `stories/` | Output JSON and PNG files from real analyses |
+| `Helpers/reflection.md` | Prompt for writing reflections in Ben's voice |
+
+## Setup
+
+Both tools have independent setup. Run from the relevant directory:
+
+```bash
+# Main visualiser
+make setup          # installs pyplutchik, matplotlib, numpy
+
+# Text analyzer
+cd emoatlas_analyzer
+make setup          # installs emoatlas, spaCy, downloads en_core_web_lg + NLTK wordnet
+```
+
+## Running
+
+```bash
+# Visualise an existing JSON analysis
+./pluto stories/my-story.json --verbose
+
+# Analyze text and produce JSON
+./emoatlas_analyzer/analyze --id my-story path/to/text.txt
+
+# Then visualise the result
+./pluto emoatlas_analyzer/stories/my-story.json
+```
+
+Output PNGs are written alongside the input JSON as `<name>-plutchik.png`.
+
+## Testing
+
+```bash
+make test                        # runs against stories/john-oliver-claude.json
+cd emoatlas_analyzer && make test # creates and analyzes test_sample.txt
+```
+
+## Checking dependencies
+
+```bash
+make check
+cd emoatlas_analyzer && make check
+```
+
+## JSON format
+
+The canonical schema is at `schemas/plutchik.json`. The key field is `part2_intensity_levels`, which maps each of the 8 Plutchik emotions to `{mild, moderate, intense}` float values. `schemas/plutchik-legacy.json` documents the older flat format.
