@@ -1,0 +1,264 @@
+#!/usr/bin/env python3
+"""
+EmoAtlas Text Analyzer - Convert text to Plutchik-compatible JSON
+
+This script analyzes text files using EmoAtlas and converts the results to 
+Plutchik emotion analysis JSON format compatible with the Pluto visualizer.
+
+Usage: 
+  analyze --id story-id text.txt    # Creates stories/story-id.json
+  analyze text.txt                  # Creates text-analysis.json
+
+Dependencies:
+- emoatlas
+- spacy (with en_core_web_lg model)
+- nltk (with wordnet data)
+"""
+
+import sys
+import os
+import argparse
+import json
+from pathlib import Path
+from datetime import datetime
+
+try:
+    from emoatlas import EmoScores
+    import nltk
+    import spacy
+except ImportError:
+    print("Error: EmoAtlas dependencies not found. Please install them with:")
+    print("pip install -r requirements.txt")
+    print("python -m spacy download en_core_web_lg")
+    print("python -c \"import nltk; nltk.download('wordnet')\"")
+    sys.exit(1)
+
+class EmoAtlasAnalyzer:
+    """Handles text analysis using EmoAtlas and conversion to Plutchik JSON format."""
+    
+    def __init__(self):
+        # Initialize EmoAtlas
+        try:
+            self.emo = EmoScores(language="english")
+        except Exception as e:
+            raise RuntimeError(f"Failed to initialize EmoAtlas: {e}")
+    
+    def analyze_text_file(self, text_file_path):
+        """
+        Analyze a text file using EmoAtlas and return emotion scores.
+        
+        Args:
+            text_file_path (str): Path to the text file
+            
+        Returns:
+            dict: EmoAtlas emotion analysis results
+        """
+        try:
+            with open(text_file_path, 'r', encoding='utf-8') as file:
+                text = file.read().strip()
+        except Exception as e:
+            raise FileNotFoundError(f"Could not read text file {text_file_path}: {e}")
+        
+        if not text:
+            raise ValueError("Text file is empty")
+        
+        try:
+            # Get emotion analysis from EmoAtlas
+            emotions = self.emo.emotions(text)
+            return {
+                'text': text,
+                'emotions': emotions,
+                'text_length': len(text)
+            }
+        except Exception as e:
+            raise RuntimeError(f"EmoAtlas analysis failed: {e}")
+    
+    def convert_to_plutchik_json(self, emoatlas_result, story_id):
+        """
+        Convert EmoAtlas results to Plutchik JSON format.
+        
+        Args:
+            emoatlas_result (dict): Results from EmoAtlas analysis
+            story_id (str): Identifier for the story
+            
+        Returns:
+            dict: JSON in Plutchik format
+        """
+        emotions = emoatlas_result['emotions']
+        text_length = emoatlas_result['text_length']
+        
+        # EmoAtlas uses different emotion names, map them to Plutchik
+        emoatlas_to_plutchik = {
+            'joy': 'joy',
+            'trust': 'trust', 
+            'fear': 'fear',
+            'surprise': 'surprise',
+            'sadness': 'sadness',
+            'disgust': 'disgust',
+            'anger': 'anger',
+            'anticipation': 'anticipation'
+        }
+        
+        # Initialize basic emotions with 0 values
+        basic_emotions = {emotion: 0.0 for emotion in emoatlas_to_plutchik.values()}
+        intensity_levels = {
+            emotion: {"mild": 0.0, "moderate": 0.0, "intense": 0.0} 
+            for emotion in emoatlas_to_plutchik.values()
+        }
+        
+        # Extract available emotion scores from EmoAtlas
+        # EmoAtlas returns integer counts (0-4), we need to normalize to 0-1
+        if isinstance(emotions, dict):
+            # Find maximum score to normalize properly
+            max_score = max(emotions.values()) if emotions.values() else 1
+            
+            for emo_key, emo_value in emotions.items():
+                # EmoAtlas uses exact Plutchik emotion names
+                if emo_key in emoatlas_to_plutchik and isinstance(emo_value, (int, float)):
+                    plutchik_emotion = emoatlas_to_plutchik[emo_key]
+                    
+                    # Normalize score to 0-1 range (EmoAtlas gives 0-4 integer scores)
+                    normalized_score = float(emo_value) / 4.0  # Normalize to 0-1 range
+                    basic_emotions[plutchik_emotion] = normalized_score
+                    
+                    # Distribute intensity (simple heuristic: moderate gets most weight)
+                    if normalized_score > 0:
+                        intensity_levels[plutchik_emotion]["moderate"] = normalized_score * 0.7
+                        intensity_levels[plutchik_emotion]["mild"] = normalized_score * 0.2
+                        intensity_levels[plutchik_emotion]["intense"] = normalized_score * 0.1
+        
+        # Find dominant emotions
+        dominant_emotions = sorted(basic_emotions.items(), key=lambda x: x[1], reverse=True)[:3]
+        dominant_emotion_names = [emotion for emotion, score in dominant_emotions if score > 0.1]
+        
+        # Generate overall emotional tone description
+        if dominant_emotion_names:
+            tone_description = f"Primary emotions: {', '.join(dominant_emotion_names)}"
+        else:
+            tone_description = "Neutral emotional tone"
+        
+        # Create the full Plutchik JSON structure
+        plutchik_json = {
+            "analysis_metadata": {
+                "text_length": text_length,
+                "analysis_timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "dominant_emotions": dominant_emotion_names,
+                "overall_emotional_tone": tone_description,
+                "confidence_score": 0.7,  # Default confidence for EmoAtlas
+                "source": "EmoAtlas",
+                "story_id": story_id
+            },
+            "part1_basic_emotions": basic_emotions,
+            "part2_intensity_levels": intensity_levels,
+            "part3_emotional_dyads": {
+                "primary_dyads": {
+                    "optimism": 0.0, "love": 0.0, "submission": 0.0, "awe": 0.0,
+                    "disapproval": 0.0, "remorse": 0.0, "contempt": 0.0, "aggressiveness": 0.0
+                },
+                "secondary_dyads": {
+                    "pride": 0.0, "hope": 0.0, "anxiety": 0.0, "shame": 0.0,
+                    "sentimentality": 0.0, "cynicism": 0.0, "outrage": 0.0, "envy": 0.0
+                },
+                "tertiary_dyads": {
+                    "delight": 0.0, "guilt": 0.0, "curiosity": 0.0, "despair": 0.0,
+                    "unbelief": 0.0, "pessimism": 0.0, "morbidness": 0.0, "dominance": 0.0
+                }
+            },
+            "analysis_summary": {
+                "key_findings": [
+                    f"Analysis generated using EmoAtlas for story: {story_id}",
+                    f"Text contains {text_length} characters",
+                    f"Primary emotions detected: {', '.join(dominant_emotion_names) if dominant_emotion_names else 'None significant'}"
+                ],
+                "emotional_complexity": "Basic emotion analysis using EmoAtlas. Dyad analysis not available.",
+                "notable_patterns": ["EmoAtlas-based analysis", "Limited to basic emotions"],
+                "recommendations": [
+                    "Consider manual review for complex emotional analysis",
+                    "EmoAtlas provides foundational emotion detection"
+                ]
+            }
+        }
+        
+        return plutchik_json
+
+def main():
+    """Main function to handle command line interface."""
+    parser = argparse.ArgumentParser(
+        description='Analyze text using EmoAtlas and generate Plutchik-compatible JSON',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Generate JSON with custom ID:
+  analyze --id story-001 transcript.txt    # Creates stories/story-001.json
+  
+  # Generate JSON with auto-generated name:
+  analyze transcript.txt                    # Creates transcript-analysis.json
+        """
+    )
+    
+    parser.add_argument('text_file',
+                       help='Path to text file to analyze')
+    parser.add_argument('--id', 
+                       help='Story ID (creates stories/ID.json, otherwise creates FILENAME-analysis.json)')
+    parser.add_argument('--output', '-o',
+                       help='Custom output path for the JSON file')
+    parser.add_argument('--verbose', '-v', action='store_true',
+                       help='Show detailed analysis information')
+    
+    args = parser.parse_args()
+    
+    # Validate input file
+    if not os.path.isfile(args.text_file):
+        print(f"Error: Text file '{args.text_file}' not found.")
+        sys.exit(1)
+    
+    try:
+        print(f"Initializing EmoAtlas...")
+        analyzer = EmoAtlasAnalyzer()
+        
+        print(f"Analyzing text file: {args.text_file}")
+        emoatlas_result = analyzer.analyze_text_file(args.text_file)
+        
+        # Determine story ID and output path
+        if args.id:
+            story_id = args.id
+            # Ensure stories directory exists
+            stories_dir = Path("stories")
+            stories_dir.mkdir(exist_ok=True)
+            output_path = stories_dir / f"{story_id}.json"
+        else:
+            text_file_path = Path(args.text_file)
+            story_id = text_file_path.stem
+            output_path = text_file_path.parent / f"{text_file_path.stem}-analysis.json"
+        
+        # Override with custom output if specified
+        if args.output:
+            output_path = Path(args.output)
+            story_id = output_path.stem
+        
+        print(f"Converting to Plutchik JSON format...")
+        plutchik_json = analyzer.convert_to_plutchik_json(emoatlas_result, story_id)
+        
+        # Save JSON file
+        with open(output_path, 'w', encoding='utf-8') as f:
+            json.dump(plutchik_json, f, indent=2, ensure_ascii=False)
+        
+        print(f"✓ Analysis complete! JSON saved to: {output_path}")
+        
+        if args.verbose:
+            print(f"\nAnalysis Summary:")
+            print(f"  Text length: {emoatlas_result['text_length']} characters")
+            print(f"  Dominant emotions: {', '.join(plutchik_json['analysis_metadata']['dominant_emotions'])}")
+            print(f"  Overall tone: {plutchik_json['analysis_metadata']['overall_emotional_tone']}")
+            
+            print(f"\nBasic Emotion Scores:")
+            for emotion, score in plutchik_json['part1_basic_emotions'].items():
+                if score > 0:
+                    print(f"  {emotion.capitalize()}: {score:.3f}")
+        
+    except Exception as e:
+        print(f"Error during analysis: {e}")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

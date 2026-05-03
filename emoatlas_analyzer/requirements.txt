@@ -1,0 +1,9 @@
+# EmoAtlas Text Analysis Tool Dependencies
+# EmoAtlas and its dependencies
+git+https://github.com/MassimoStel/emoatlas
+spacy>=3.4.0
+nltk>=3.7
+
+# Standard dependencies
+numpy
+pandas
