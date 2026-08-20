@@ -1,4 +1,4 @@
-@/Users/bentheax/Agents/projects/Code/rules/python.md
+@~/Agents/projects/Code/rules/python.md
 
 # Pluto
 
