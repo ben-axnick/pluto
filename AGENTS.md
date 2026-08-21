@@ -7,15 +7,11 @@ description: Python conventions
 
 # Python
 
-Stub. Fill in as conventions stabilise. The shape mirrors `node.md` and `ruby.md`: this is the higher-level standard for working in a Python codebase, loaded per-project from each project's CLAUDE.md.
-
-## Defaults until I write something more opinionated
-
-- Target whichever Python version the project's `pyproject.toml`, `.python-version`, or Dockerfile already pins. Don't introduce a new version without a reason.
-- Prefer the standard library. Reach for a third-party dependency only when the stdlib answer is genuinely worse.
-- Type-hint new code. Run the project's existing checker (mypy, pyright, ruff) if one is configured; don't add a new one casually.
+- Use the Python version pinned by the project's `pyproject.toml`, `.python-version` or Dockerfile. Introduce a different version only for a stated project requirement.
+- Prefer the standard library when it produces code that is at least as clear and maintainable as a third-party dependency. Add a dependency when it materially improves the implementation.
+- Type-hint new code. Run the existing checker, such as mypy, pyright or ruff, when the project configures one. Do not add a checker without a project need.
 - Use `python -m <module>` for entry points so the package layout stays import-clean.
-- Virtualenvs and dependencies follow the project's existing tooling (uv, poetry, pip-tools, plain venv). Read the project's README before installing.
+- Manage virtual environments and dependencies with the project's existing tooling, such as uv, Poetry, pip-tools or venv. Read the project's README before installing anything.
 <!-- /source: shared/rules/lang/python.md -->
 
 # Pluto
